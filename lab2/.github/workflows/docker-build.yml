@@ -1,45 +1,33 @@
-name: CI/CD for Docker app
+name: Deploy
 
 on:
   push:
-    branches: 
-    - main
-    - develop
-env:
-  IMAGE_NAME: lab2 
-  
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-
+  deploy:
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        env:
+          GIT_TOKEN: ${{ secrets.IS_GITHUB_TOKEN }}
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          fetch-depth: 0
 
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./Lab2
-          file: ./Lab2/Dockerfile
-          push: true
-          platforms: linux/amd64
-          tags: |
-            juliadv8/lab2:latest
-            juliadv8/lab2:${{ github.ref_name }}
+      - name: Log in to Docker Hub
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
+      - name: Build and tag image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-flask-app:latest -f Dockerfile.txt .
 
-      - name: Deploy (production)
-        if: github.ref == 'refs/heads/main'
-        run: echo "Deploying to production server..."
+      - name: Push image to Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-flask-app:latest
 
-      - name: Deploy (development)
-        if: github.ref == 'refs/heads/develop'
-        run: echo "Deploying to development server..."
+      - name: Deploy
+        run: echo "Добавлять шаг деплоя (можно просто echo сообщение)"
