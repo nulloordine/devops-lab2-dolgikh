@@ -1,0 +1,45 @@
+name: CI/CD for Docker app
+
+on:
+  push:
+    branches: 
+    - main
+    - develop
+env:
+  IMAGE_NAME: lab2 
+  
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Lab2
+          file: ./Lab2/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            juliadv8/lab2:latest
+            juliadv8/lab2:${{ github.ref_name }}
+
+
+      - name: Deploy (production)
+        if: github.ref == 'refs/heads/main'
+        run: echo "Deploying to production server..."
+
+      - name: Deploy (development)
+        if: github.ref == 'refs/heads/develop'
+        run: echo "Deploying to development server..."
