@@ -1,0 +1,206 @@
+Last login: Thu Oct 16 00:36:28 on ttys004
+vladislavdolgih@NullooMac ~ % cd Users
+cd: no such file or directory: Users
+vladislavdolgih@NullooMac ~ % cd /Users/vladislavdolgih/Documents/GitHub
+vladislavdolgih@NullooMac GitHub % ls 
+Homework		PythonHM		devops-lab-dolgikh	devops-lab2-dolgikh	ml_hm
+vladislavdolgih@NullooMac GitHub % cd devops-lab2-dolgikh
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker network create monitoring
+
+Error response from daemon: network with name monitoring already exists
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name node-exporter \
+  --network monitoring \
+  --restart unless-stopped \
+  -p 9100:9100 \
+  -v "/proc:/host/proc:ro" \
+  -v "/sys:/host/sys:ro" \
+  -v "/:/rootfs:ro" \
+  prom/node-exporter \
+  --path.procfs=/host/proc \
+  --path.rootfs=/rootfs \
+  --path.sysfs=/host/sys \
+  --collector.filesystem.mount-points-exclude="^/(sys|proc|dev|host|etc)($$|/)"
+
+docker: Error response from daemon: Conflict. The container name "/node-exporter" is already in use by container "21511720deee3e6a177c562f44a8a249a29b955754154622c063702f46b7e0c4". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker rm -f node-exporter
+
+node-exporter
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name node-exporter \
+  --network monitoring \
+  --restart unless-stopped \
+  -p 9100:9100 \
+  -v "/proc:/host/proc:ro" \
+  -v "/sys:/host/sys:ro" \
+  -v "/:/rootfs:ro" \
+  prom/node-exporter \
+  --path.procfs=/host/proc \
+  --path.rootfs=/rootfs \
+  --path.sysfs=/host/sys \
+  --collector.filesystem.mount-points-exclude="^/(sys|proc|dev|host|etc)($$|/)"
+
+31d85fff4c11508adba38be4341de792839be02d66790d14f302db4632a9a2f1
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker network create monitoring
+
+Error response from daemon: network with name monitoring already exists
+vladislavdolgih@NullooMac devops-lab2-dolgikh % curl -s http://localhost:9100/metrics | head -n 5
+
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 0
+go_gc_duration_seconds{quantile="0.25"} 0
+go_gc_duration_seconds{quantile="0.5"} 0
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name prometheus \
+  --network monitoring \
+  -p 9090:9090 \
+  -v ~/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro \
+  prom/prometheus
+
+docker: Error response from daemon: Conflict. The container name "/prometheus" is already in use by container "8865dd420f3d226d6b209575af841c04d7bfd79a8c7ed61b6e5138caf76481fb". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker rm -f prometheus
+
+prometheus
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name prometheus \
+  --network monitoring \
+  --restart unless-stopped \
+  -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+
+23fe01f092fd1764797f8254fd279c3f9151e36b60daf4e74dbe400f4a49a1fe
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/host_mnt/Users/vladislavdolgih/Documents/GitHub/devops-lab2-dolgikh/prometheus.yml" to rootfs at "/etc/prometheus/prometheus.yml": create mountpoint for /etc/prometheus/prometheus.yml mount: cannot create subdirectories in "/var/lib/docker/rootfs/overlayfs/23fe01f092fd1764797f8254fd279c3f9151e36b60daf4e74dbe400f4a49a1fe/etc/prometheus/prometheus.yml": not a directory: unknown: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+
+Run 'docker run --help' for more information
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker ps
+
+CONTAINER ID   IMAGE                COMMAND                  CREATED              STATUS              PORTS                                         NAMES
+31d85fff4c11   prom/node-exporter   "/bin/node_exporter …"   About a minute ago   Up About a minute   0.0.0.0:9100->9100/tcp, [::]:9100->9100/tcp   node-exporter
+e18efeb417b8   grafana/grafana      "/run.sh"                48 minutes ago       Up 48 minutes       0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp   grafana
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name prometheus \
+  --network monitoring \
+  --restart unless-stopped \
+  -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+
+docker: Error response from daemon: Conflict. The container name "/prometheus" is already in use by container "23fe01f092fd1764797f8254fd279c3f9151e36b60daf4e74dbe400f4a49a1fe". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker ps -a
+
+CONTAINER ID   IMAGE                COMMAND                  CREATED              STATUS                    PORTS                                         NAMES
+23fe01f092fd   prom/prometheus      "/bin/prometheus --c…"   About a minute ago   Created                                                                 prometheus
+31d85fff4c11   prom/node-exporter   "/bin/node_exporter …"   2 minutes ago        Up 2 minutes              0.0.0.0:9100->9100/tcp, [::]:9100->9100/tcp   node-exporter
+e18efeb417b8   grafana/grafana      "/run.sh"                49 minutes ago       Up 49 minutes             0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp   grafana
+3845c340fa4d   ubuntu               "bash"                   2 days ago           Exited (137) 2 days ago                                                 volume-test
+88d57b627fd3   ubuntu               "bash"                   2 days ago           Exited (127) 2 days ago                                                 keen_raman
+7aa27bec6be4   hello-world          "/hello"                 2 days ago           Exited (0) 2 days ago                                                   kind_davinci
+3dad30da4dd7   hello-world          "/hello"                 2 days ago           Exited (0) 2 days ago                                                   nifty_williams
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker rm -f prometheus
+
+prometheus
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker ps -a
+
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS                    PORTS                                         NAMES
+31d85fff4c11   prom/node-exporter   "/bin/node_exporter …"   2 minutes ago    Up 2 minutes              0.0.0.0:9100->9100/tcp, [::]:9100->9100/tcp   node-exporter
+e18efeb417b8   grafana/grafana      "/run.sh"                49 minutes ago   Up 49 minutes             0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp   grafana
+3845c340fa4d   ubuntu               "bash"                   2 days ago       Exited (137) 2 days ago                                                 volume-test
+88d57b627fd3   ubuntu               "bash"                   2 days ago       Exited (127) 2 days ago                                                 keen_raman
+7aa27bec6be4   hello-world          "/hello"                 2 days ago       Exited (0) 2 days ago                                                   kind_davinci
+3dad30da4dd7   hello-world          "/hello"                 2 days ago       Exited (0) 2 days ago                                                   nifty_williams
+vladislavdolgih@NullooMac devops-lab2-dolgikh % docker run -d \
+  --name prometheus \
+  --network monitoring \
+  --restart unless-stopped \
+  -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+
+5b75566429b77024cc50211970416971fd66c3ff9487f07fd15ccd94a205c954
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/host_mnt/Users/vladislavdolgih/Documents/GitHub/devops-lab2-dolgikh/prometheus.yml" to rootfs at "/etc/prometheus/prometheus.yml": create mountpoint for /etc/prometheus/prometheus.yml mount: cannot create subdirectories in "/var/lib/docker/rootfs/overlayfs/5b75566429b77024cc50211970416971fd66c3ff9487f07fd15ccd94a205c954/etc/prometheus/prometheus.yml": not a directory: unknown: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+
+Run 'docker run --help' for more information
+vladislavdolgih@NullooMac devops-lab2-dolgikh % pwd
+ls -l
+
+/Users/vladislavdolgih/Documents/GitHub/devops-lab2-dolgikh
+total 32
+-rw-r--r--@ 1 vladislavdolgih  staff  252 Oct 15 21:16 Dockerfile
+-rw-r--r--@ 1 vladislavdolgih  staff  174 Oct 14 17:48 app.py
+drwxr-xr-x@ 3 vladislavdolgih  staff   96 Oct 16 01:16 prometheus
+drwxr-xr-x  2 vladislavdolgih  staff   64 Oct 16 01:37 prometheus.yml
+-rw-r--r--@ 1 vladislavdolgih  staff    1 Oct 15 20:58 readme.md
+-rw-r--r--@ 1 vladislavdolgih  staff   28 Oct 14 17:48 requirements.txt
+vladislavdolgih@NullooMac devops-lab2-dolgikh % ls -l prometheus.yml
+
+total 0
+vladislavdolgih@NullooMac devops-lab2-dolgikh % rm -rf prometheus.yml
+
+vladislavdolgih@NullooMac devops-lab2-dolgikh % nano prometheus.yml
+
+
+  UW PICO 5.09                                                                                    File: prometheus.yml                                                                                     Modified  
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+^G Get Help                        ^O WriteOut                        ^R Read File                       ^Y Prev Pg                         ^K Cut Text                        ^C Cur Pos                         
+^X Exit                            ^J Justify                         ^W Where is                        ^V Next Pg                         ^U UnCut Text                      ^T To Spell                        
