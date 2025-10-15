@@ -3,6 +3,7 @@ WORKDIR /app
 RUN apt update && apt install -y curl vim
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+RUN cd ./lab2
 COPY app.py .
 RUN useradd -u 1000 appuser
 USER appuser
